@@ -1,0 +1,127 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: microservices
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodbdata:/data/db
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  auth-service:
+    build:
+      context: .
+      args:
+        APP_NAME: auth-service
+    environment:
+      - KAFKA_BROKERS=kafka:29092
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - kafka
+      - redis
+
+  product-service:
+    build:
+      context: .
+      args:
+        APP_NAME: product-service
+    environment:
+      - DATABASE_URL=mysql://user:password@mysql:3306/microservices
+      - KAFKA_BROKERS=kafka:29092
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mysql
+      - kafka
+      - redis
+
+  order-service:
+    build:
+      context: .
+      args:
+        APP_NAME: order-service
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/orders
+      - KAFKA_BROKERS=kafka:29092
+      - REDIS_URL=redis://redis:6379
+
+    depends_on:
+      - mongodb
+      - kafka
+      - redis
+
+  payment-service:
+    build:
+      context: .
+      args:
+        APP_NAME: payment-service
+    environment:
+      - KAFKA_BROKERS=kafka:29092
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - kafka
+      - redis
+
+  email-service:
+    build:
+      context: .
+      args:
+        APP_NAME: email-service
+    environment:
+      - KAFKA_BROKERS=kafka:29092
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - kafka
+      - redis
+
+  admin:
+    build:
+      context: .
+      args:
+        APP_NAME: admin
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - payment-service
+
+  client:
+    build:
+      context: .
+      args:
+        APP_NAME: client
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - payment-service
+
+volumes:
+  mysqldata:
+  mongodbdata:

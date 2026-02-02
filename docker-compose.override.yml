@@ -1,0 +1,96 @@
+services:
+  mysql:
+    ports:
+      - "3307:3306"
+
+  mongodb:
+    ports:
+      - "27018:27017"
+
+  kafka:
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+  auth-service:
+    build:
+      target: development
+    ports:
+      - "8004:8004"
+    environment:
+      - PORT=8004
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+
+  product-service:
+    build:
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+
+  order-service:
+    build:
+      target: development
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+
+  payment-service:
+    build:
+      target: development
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+
+  email-service:
+    build:
+      target: development
+    environment:
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+
+  admin:
+    build:
+      target: development
+    ports:
+      - "3002:3002"
+    environment:
+      - SERVER_AUTH_SERVICE_URL=${SERVER_AUTH_SERVICE_URL}
+      - SERVER_PRODUCT_SERVICE_URL=${SERVER_PRODUCT_SERVICE_URL}
+      - SERVER_ORDER_SERVICE_URL=${SERVER_ORDER_SERVICE_URL}
+      - SERVER_PAYMENT_SERVICE_URL=${SERVER_PAYMENT_SERVICE_URL}
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=${NEXT_PUBLIC_AUTH_SERVICE_URL}
+      - NEXT_PUBLIC_PRODUCT_SERVICE_URL=${NEXT_PUBLIC_PRODUCT_SERVICE_URL}
+      - NEXT_PUBLIC_ORDER_SERVICE_URL=${NEXT_PUBLIC_ORDER_SERVICE_URL}
+      - NEXT_PUBLIC_PAYMENT_SERVICE_URL=${NEXT_PUBLIC_PAYMENT_SERVICE_URL}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+
+  client:
+    build:
+      target: development
+    ports:
+      - "3003:3003"
+    environment:
+      - SERVER_AUTH_SERVICE_URL=${SERVER_AUTH_SERVICE_URL}
+      - SERVER_PRODUCT_SERVICE_URL=${SERVER_PRODUCT_SERVICE_URL}
+      - SERVER_ORDER_SERVICE_URL=${SERVER_ORDER_SERVICE_URL}
+      - SERVER_PAYMENT_SERVICE_URL=${SERVER_PAYMENT_SERVICE_URL}
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=${NEXT_PUBLIC_AUTH_SERVICE_URL}
+      - NEXT_PUBLIC_PRODUCT_SERVICE_URL=${NEXT_PUBLIC_PRODUCT_SERVICE_URL}
+      - NEXT_PUBLIC_ORDER_SERVICE_URL=${NEXT_PUBLIC_ORDER_SERVICE_URL}
+      - NEXT_PUBLIC_PAYMENT_SERVICE_URL=${NEXT_PUBLIC_PAYMENT_SERVICE_URL}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}

@@ -1,0 +1,106 @@
+services:
+  mysql:
+    image: mysql:8.0
+    # PRODUCTION DATABASE SETTINGS
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PROD_DB_ROOT_PASSWORD:-prod_root_password}
+      MYSQL_DATABASE: ${PROD_DB_NAME:-prod_microservices}
+      MYSQL_USER: ${PROD_DB_USER:-prod_user}
+      MYSQL_PASSWORD: ${PROD_DB_PASSWORD:-prod_password}
+    volumes:
+      - mysqldata_prod:/var/lib/mysql
+    restart: always
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodbdata_prod:/data/db
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  kafka:
+    restart: always
+
+  auth-service:
+    build:
+      target: production
+    ports:
+      - "8004:8004"
+    environment:
+      - NODE_ENV=production
+      - PORT=8004
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+      - REDIS_URL=${PROD_REDIS_URL:-redis://redis:6379}
+    restart: always
+
+  product-service:
+    build:
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      # Option to use an external managed DB (like RDS/Supabase)
+      - DATABASE_URL=${PROD_PRODUCT_DATABASE_URL:-mysql://${PROD_DB_USER:-prod_user}:${PROD_DB_PASSWORD:-prod_password}@mysql:3306/${PROD_DB_NAME:-prod_microservices}}
+      - REDIS_URL=${PROD_REDIS_URL:-redis://redis:6379}
+    restart: always
+
+  order-service:
+    build:
+      target: production
+    ports:
+      - "8001:8001"
+    environment:
+      - NODE_ENV=production
+      - PORT=8001
+      # Option to use an external managed DB (like Atlas)
+      - MONGO_URL=${PROD_ORDER_DATABASE_URL:-mongodb://mongodb:27017/orders}
+      - REDIS_URL=${PROD_REDIS_URL:-redis://redis:6379}
+    restart: always
+
+  payment-service:
+    build:
+      target: production
+    ports:
+      - "8002:8002"
+    environment:
+      - NODE_ENV=production
+      - PORT=8002
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - REDIS_URL=${PROD_REDIS_URL:-redis://redis:6379}
+    restart: always
+
+  email-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+    restart: always
+
+  admin:
+    build:
+      target: production
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://your-production-url.com/auth
+      - NEXT_PUBLIC_PRODUCT_SERVICE_URL=http://your-production-url.com/product
+      - NEXT_PUBLIC_ORDER_SERVICE_URL=http://your-production-url.com/order
+      - NEXT_PUBLIC_PAYMENT_SERVICE_URL=http://your-production-url.com/payment
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+    restart: always
+
+volumes:
+  mysqldata_prod:
+  mongodbdata_prod:
