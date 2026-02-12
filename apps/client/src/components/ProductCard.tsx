@@ -9,9 +9,12 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 
 const ProductCard = ({ product }: { product: ProductType }) => {
+  const sizes = (product.sizes as string[]) || [];
+  const colors = (product.colors as string[]) || [];
+
   const [productTypes, setProductTypes] = useState({
-    size: product.sizes[0],
-    color: product.colors[0],
+    size: sizes[0],
+    color: colors[0],
   });
 
   const { addToCart } = useCartStore();
@@ -73,7 +76,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
                 handleProductType({ type: "size", value: e.target.value })
               }
             >
-              {product.sizes.map((size) => (
+              {sizes.map((size) => (
                 <option key={size} value={size}>
                   {size.toUpperCase()}
                 </option>
@@ -84,9 +87,9 @@ const ProductCard = ({ product }: { product: ProductType }) => {
           <div className="flex flex-col gap-1">
             <span className="text-gray-500">Color</span>
             <div className="flex items-center gap-2">
-              {product.colors.map((color) => (
+              {colors.map((color) => (
                 <div
-                  className={`cursor-pointer border-1 ${
+                  className={`cursor-pointer border ${
                     productTypes.color === color
                       ? "border-gray-400"
                       : "border-gray-200"
