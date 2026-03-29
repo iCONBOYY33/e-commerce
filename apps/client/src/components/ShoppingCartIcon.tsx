@@ -19,3 +19,4 @@ const ShoppingCartIcon = () => {
 };
 
 export default ShoppingCartIcon;
+  
