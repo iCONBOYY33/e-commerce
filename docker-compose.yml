@@ -40,6 +40,7 @@ services:
       context: .
       args:
         APP_NAME: auth-service
+    restart: unless-stopped
     environment:
       - KAFKA_BROKERS=kafka:29092
       - REDIS_URL=redis://redis:6379
@@ -52,6 +53,7 @@ services:
       context: .
       args:
         APP_NAME: product-service
+    restart: unless-stopped
     environment:
       - DATABASE_URL=mysql://user:password@mysql:3306/microservices
       - KAFKA_BROKERS=kafka:29092
@@ -66,6 +68,7 @@ services:
       context: .
       args:
         APP_NAME: order-service
+    restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://mongodb:27017/orders
       - KAFKA_BROKERS=kafka:29092
@@ -81,6 +84,7 @@ services:
       context: .
       args:
         APP_NAME: payment-service
+    restart: unless-stopped
     environment:
       - KAFKA_BROKERS=kafka:29092
       - REDIS_URL=redis://redis:6379
@@ -93,6 +97,7 @@ services:
       context: .
       args:
         APP_NAME: email-service
+    restart: unless-stopped
     environment:
       - KAFKA_BROKERS=kafka:29092
       - REDIS_URL=redis://redis:6379

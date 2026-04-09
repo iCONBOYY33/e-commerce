@@ -129,7 +129,8 @@ const fetchProducts = async ({
   search?: string;
   params: "homepage" | "products";
 }) => {
-  console.log("SERVICE URL:", process.env.SERVER_PRODUCT_SERVICE_URL);
+  // console.log("SERVICE URL:", process.env.SERVER_PRODUCT_SERVICE_URL);
+  console.log("SERVICE URL1:", process.env.SERVER_PRODUCT_SERVICE_URL);
   const queryParams = new URLSearchParams();
   if (category && category !== "all") {
     queryParams.append("category", category);

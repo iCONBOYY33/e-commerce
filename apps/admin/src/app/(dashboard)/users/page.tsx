@@ -8,7 +8,7 @@ const getUsersData = async (): Promise<UserType[]> => {
     const { getToken } = await auth();
     const token = await getToken();
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_AUTH_SERVICE_URL}/users`,
+      `${process.env.SERVER_AUTH_SERVICE_URL}/users`,
       {
         method: "GET",
         headers: {

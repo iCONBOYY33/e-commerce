@@ -265,7 +265,7 @@ const getOrdersData = async (): Promise<OrderType[]> => {
     const { getToken } = await auth();
     const token = await getToken();
     const ordersFetch = await fetch(
-      `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL}/orders`,
+      `${process.env.SERVER_ORDER_SERVICE_URL}/orders`,
       {
         method: "GET",
         headers: {

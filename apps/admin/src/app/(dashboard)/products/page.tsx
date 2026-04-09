@@ -118,7 +118,7 @@ import { ProductType } from "@repo/types";
 const getData = async (): Promise<ProductType[]> => {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL}/products`
+      `${process.env.SERVER_PRODUCT_SERVICE_URL}/products`
     );
     const data = await response.json();
     return data;
