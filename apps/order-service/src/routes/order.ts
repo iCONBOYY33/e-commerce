@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify";
 import { Order } from "@repo/order-db";
 import { startOfMonth, subMonths } from "date-fns";
 import { OrderVarChartType } from "@repo/types";
+import redis from "../utils/redis";
 
 export const orderRoute = async (fastify: FastifyInstance) => {
   fastify.get(
@@ -19,7 +20,16 @@ export const orderRoute = async (fastify: FastifyInstance) => {
     { preHandler: shouldBeAdmin },
     async (request, reply) => {
       const { limit } = request.query as { limit: number };
+      const cacheKey = `admin:orders:limit:${limit || "all"}`;
+      
+      const cachedOrders = await redis.get(cacheKey);
+      if (cachedOrders) {
+        return reply.send({ orders: JSON.parse(cachedOrders) });
+      }
+
       const orders = await Order.find().limit(limit).sort({ createdAt: -1 });
+      
+      await redis.set(cacheKey, JSON.stringify(orders), "EX", 300); // Cache for 5 minutes
       return reply.send({ orders });
     }
   );
@@ -28,6 +38,13 @@ export const orderRoute = async (fastify: FastifyInstance) => {
     "/orders-varchart",
     { preHandler: shouldBeAdmin },
     async (request, reply) => {
+      const cacheKey = "admin:orders-varchart";
+      const cachedChart = await redis.get(cacheKey);
+      
+      if (cachedChart) {
+        return reply.send({ data: JSON.parse(cachedChart) });
+      }
+
       // { month: "January", total: 186, successful: 80 },
       const now = new Date();
       const twelveMonthsAgo = startOfMonth(subMonths(now, 12));
@@ -126,6 +143,7 @@ export const orderRoute = async (fastify: FastifyInstance) => {
         return blankMonth;
       });
 
+      await redis.set(cacheKey, JSON.stringify(data), "EX", 3600); // Cache for 1 hour
       return reply.send({ data });
     }
   );
@@ -142,6 +160,13 @@ export const orderRoute = async (fastify: FastifyInstance) => {
           console.log("Order not found:", id);
           return reply.status(404).send({ message: "Order not found" });
         }
+        // Invalidate related admin caches
+        await redis.del("admin:orders-varchart");
+        const keys = await redis.keys("admin:orders:*");
+        if (keys.length > 0) {
+          await redis.del(...keys);
+        }
+
         console.log("Order deleted successfully:", id);
         return reply.send({ message: "Order deleted successfully" });
       } catch (error) {
